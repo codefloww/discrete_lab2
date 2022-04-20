@@ -1,5 +1,6 @@
 import socket
 import threading
+from encoding import Encoding, Encrypting
 
 class Server:
 
@@ -10,26 +11,33 @@ class Server:
         self.username_lookup = {}
         self.s = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
+    def generate_keys(self):
+        public_server_key = Encrypting.get_public_key()
+        private_server_key = Encrypting.get_private_key()
+        return public_server_key, private_server_key
+
     def start(self):
         self.s.bind((self.host, self.port))
         self.s.listen(100)
 
         # generate keys ...
+        public, private = self.generate_keys()
+        
 
         while True:
             c, addr = self.s.accept()
             username = c.recv(1024).decode()
-            print(f"{username} tries to connect")
-            self.broadcast(f'new person has joined: {username}')
+            print(f"{username} tries to connect.")
+            self.broadcast(f'New person has joined: {username}')
             self.username_lookup[c] = username
             self.clients.append(c)
 
             # send public key to the client 
-
+            c.send(public.encode())
             # ...
-
+            user_public = c.recv(1024)
             # encrypt the secret with the clients public key
-
+            
             # ...
 
             # send the encrypted secret to a client 
