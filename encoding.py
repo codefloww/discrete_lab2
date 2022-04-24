@@ -1,5 +1,6 @@
 """module for encrypting and dectrypting messages"""
 import random
+import os
 
 
 class Encrypting:
@@ -43,7 +44,6 @@ class Encrypting:
         self.e = self._find_relatively_prime(eul)
         return self.n, self.e, eul
 
-
     def get_keys(self):
         return (self.n, self.e), (self.n, self.__d)
 
@@ -53,7 +53,7 @@ class Encrypting:
     # def get_private_key(self):
     #     return self.__d
 
-    def encrypt_message(self, message: str, public_key = None) -> str:
+    def encrypt_message(self, message: str, public_key=None) -> str:
         """encrypts a message
 
         Args:
@@ -64,19 +64,26 @@ class Encrypting:
         """
         public_key = public_key or (self.n, self.e)
         encrypted_str = "".join(map(lambda x: Encrypting.dictionary[x], message))
-  
+
         self._find_block_size(public_key[0])
-        encrypted_str = encrypted_str + "0" * (Encrypting.block_size - (len(encrypted_str) % Encrypting.block_size))
+        encrypted_str = encrypted_str + "0" * (
+            Encrypting.block_size - (len(encrypted_str) % Encrypting.block_size)
+        )
         encrypted_msg = []
         for i in range(len(encrypted_str) // int(Encrypting.block_size)):
             encrypted_msg.append(
                 self._encrypt_block(
-                    encrypted_str[i * int(Encrypting.block_size) : (i + 1) * int(Encrypting.block_size)], public_key
+                    encrypted_str[
+                        i
+                        * int(Encrypting.block_size) : (i + 1)
+                        * int(Encrypting.block_size)
+                    ],
+                    public_key,
                 )
             )
-        return ' '.join(map(lambda x: str(x),encrypted_msg))
+        return " ".join(map(lambda x: str(x), encrypted_msg))
 
-    def decrypt_message(self, encrypted_msg: str, private_key = None) -> str:
+    def decrypt_message(self, encrypted_msg: str, private_key=None) -> str:
         """decrypts a message
 
         Args:
@@ -85,10 +92,10 @@ class Encrypting:
         Returns:
             str: decrypted message
         """
-        private_key = private_key or (self.n,self.__d)
+        private_key = private_key or (self.n, self.__d)
         reverse_dicitonary = {v: k for k, v in Encrypting.dictionary.items()}
         decrypted_msg = []
-        encrypted_msg = encrypted_msg.split('~')[-1].split()
+        encrypted_msg = encrypted_msg.split("~")[-1].split()
         self._find_block_size(private_key[0])
         for block in encrypted_msg:
             decrypted_msg.append(self._decrypt_block(block, private_key))
@@ -145,13 +152,13 @@ class Encrypting:
             base = (base * base) % modulus
         return result
 
-
     @staticmethod
     def _use_prime() -> int:
         """generates a prime number"""
         primes = []
         list_primes = []
-        with open("discrete_lab2/primes.txt", "r") as csvfile:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        with open(os.path.join(current_dir, "primes.txt"), "r") as csvfile:
             primes = csvfile.readlines()
             for row in primes:
                 list_primes.extend(list(map(int, row[:-1].split("\t"))))
@@ -195,4 +202,3 @@ if __name__ == "__main__":
     print(encoded)
     print(sys.encrypt_message(encoded, public))
     print(sys.decrypt_message(encoded, private))
-
