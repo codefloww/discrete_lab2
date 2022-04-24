@@ -198,7 +198,6 @@ class Encrypting:
 if __name__ == "__main__":
     sys = Encrypting()
     public, private = sys.get_keys()
-    encoded = sys.encrypt_message("Hey, my name is Oksana", public)
-    print(encoded)
-    print(sys.encrypt_message(encoded, public))
+    encoded = sys.encrypt_message("Hey, my name is Paul", public)
+    print("Encrypted message with rsa:", encoded)
     print(sys.decrypt_message(encoded, private))
