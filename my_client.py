@@ -55,7 +55,11 @@ class Client:
 
     def listen_for_messages(self):
         while True:
-            message = Encrypting().decrypt_message(self.s.recv(1024).decode(), self.client_private)
+            packet = self.s.recv(1024).decode()
+            msg_hash, message = packet.split(self.padding_token)[0], Encrypting().decrypt_message(packet.split(self.padding_token)[1], self.client_private).strip()
+            if sha256(message.encode()).hexdigest() != msg_hash:
+                print("[!] Message was tampered with!")
+                continue
             print("\n" + message)
 
     def close(self):

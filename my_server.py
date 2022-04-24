@@ -78,7 +78,7 @@ class Server:
             else:
                 # if we received a message, replace the <SEP>
                 # token with ": " for nice printing
-                msg = msg.replace(self.separator_token, ": ")
+                msg = msg.replace(self.separator_token, ": ").strip()
                 if on_server_msg_hash != msg_hash:
                     print(f"[!] Error: Message hash mismatch")
                     continue
@@ -87,8 +87,9 @@ class Server:
                 if client_socket != cs:
                     # and send the message to all other clients
                     client_socket.send(
+                        (sha256(msg.encode()).hexdigest()+self.padding_token+
                         Encrypting()
-                        .encrypt_message(msg, self.client_keys[str(client_socket)])
+                        .encrypt_message(msg, self.client_keys[str(client_socket)]))
                         .encode()
                     )
 
