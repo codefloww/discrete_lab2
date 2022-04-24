@@ -1,13 +1,18 @@
 import socket
 from threading import Thread
 from encoding import Encrypting
+from hashlib import sha256
+
+
 class Server:
     def __init__(self, port: int = None, host: str = None) -> None:
 
         # server's IP address
         self.SERVER_HOST = host or "0.0.0.0"
         self.SERVER_PORT = port or 5002  # port we want to use
-        self.separator_token = "<SEP>"  # we will use this to separate the client name & message
+        self.separator_token = (
+            "<SEP>"  # we will use this to separate the client name & message
+        )
         self.padding_token = "<PAD>"
         # initialize list/set of all connected client's sockets
         self.client_sockets = set()
@@ -24,9 +29,8 @@ class Server:
         # listen for upcoming connections
         self.s.listen(5)
         print(f"[*] Listening as {self.SERVER_HOST}:{self.SERVER_PORT}")
-# generates a new pair of keys for server
+        # generates a new pair of keys for server
         self.server_public, self.server_private = Encrypting().get_keys()
-
 
         while True:
             # we keep listening for new connections all the time
@@ -37,7 +41,9 @@ class Server:
 
             client_socket.send(str(self.server_public).encode())
             client_public = client_socket.recv(1024).decode()
-            client_public = Encrypting().decrypt_message(client_public, self.server_private)
+            client_public = Encrypting().decrypt_message(
+                client_public, self.server_private
+            )
 
             self.client_keys[str(client_socket)] = tuple(
                 map(int, client_public.rstrip()[1:-1].split(", "))
@@ -49,7 +55,7 @@ class Server:
             # start the thread
             t.start()
 
-    def listen_for_client(self,cs):
+    def listen_for_client(self, cs):
         """
         This function keep listening for a message from `cs` socket
         Whenever a message is received, broadcast it to all other connected clients
@@ -57,7 +63,13 @@ class Server:
         while True:
             try:
                 # keep listening for a message from `cs` socket
-                msg = Encrypting().decrypt_message(cs.recv(1024).decode(), self.server_private)
+                packet = cs.recv(1024).decode()
+                msg_hash, msg = packet.split(self.padding_token)[
+                    0
+                ], Encrypting().decrypt_message(
+                    packet.split(self.padding_token)[1], self.server_private
+                ).strip()
+                on_server_msg_hash = sha256(msg.encode()).hexdigest()
             except Exception as e:
                 # client no longer connected
                 # remove it from the set
@@ -67,6 +79,9 @@ class Server:
                 # if we received a message, replace the <SEP>
                 # token with ": " for nice printing
                 msg = msg.replace(self.separator_token, ": ")
+                if on_server_msg_hash != msg_hash:
+                    print(f"[!] Error: Message hash mismatch")
+                    continue
             # iterate over all connected sockets
             for client_socket in self.client_sockets:
                 if client_socket != cs:
@@ -76,12 +91,14 @@ class Server:
                         .encrypt_message(msg, self.client_keys[str(client_socket)])
                         .encode()
                     )
+
     def close(self):
         # close client sockets
         for cs in self.client_sockets:
             cs.close()
         # close server socket
         self.s.close()
+
 
 if __name__ == "__main__":
     # create a server object

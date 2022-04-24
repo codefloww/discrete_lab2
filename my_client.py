@@ -1,7 +1,7 @@
 import socket
 from threading import Thread
 from datetime import datetime
-
+from hashlib import sha256
 from encoding import Encrypting
 
 
@@ -48,9 +48,9 @@ class Client:
                 break
             # add the datetime, name & the color of the sender
             date_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S') 
-            to_send = f"[{date_now}] {name}{self.separator_token}{to_send}"
+            to_send = f"[{date_now}] {name}{self.separator_token}{to_send}".strip()
             # finally, send the message
-            self.s.send(Encrypting().encrypt_message(to_send, self.server_public).encode())
+            self.s.send((sha256(to_send.encode()).hexdigest()+self.padding_token+Encrypting().encrypt_message(to_send, self.server_public)).encode())
 
 
     def listen_for_messages(self):
