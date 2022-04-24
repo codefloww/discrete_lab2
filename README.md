@@ -8,7 +8,7 @@ A lab work using RSA algorithm and SHA256 for encrypted messaging using chat app
 In case of using another machine put in SERVER_HOST your local ip and then start my_client.py
 3. After connecting to server, type your username, and you ready to chat using encrypted methods
 3. By default it's possible up to 5 simultanious connections to server
-![](images/start_server.png.png)
+![](images/start_server.png)
 ![](images/connect_user.png)
 ![](images/nice.png)
 
