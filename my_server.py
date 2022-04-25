@@ -88,7 +88,9 @@ class Server:
                 # remove it from the set
                 print(f"[!] Error: {e}")
                 self.client_sockets.remove(cs)
+
             else:
+                print(self.client_sockets)
                 # if we received a message, replace the <SEP>
                 # token with ": " for nice printing
                 msg = msg.replace(self.separator_token, ": ").strip()

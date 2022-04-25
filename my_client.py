@@ -50,7 +50,9 @@ class Client:
 
         while True:
             # input message we want to send to the server
-            to_send = input()
+            to_send = ""
+            while to_send == "":
+                to_send = input()
             # a way to exit the program
             if to_send.lower() == "q":
                 break
@@ -58,7 +60,12 @@ class Client:
             date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             to_send = f"[{date_now}] {name}{self.separator_token}{to_send}".strip()
             # finally, send the message
-            self.send_message(to_send)
+            try:
+                self.send_message(to_send)
+            except KeyError:
+                print(
+                    "[!] Unable to encrypt message! Check for characters that are not in dictionary."
+                )
 
     def listen_for_messages(self) -> None:
         while True:
