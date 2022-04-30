@@ -17,7 +17,7 @@ class Client:
         self.separator_token = (
             "<SEP>"  # we will use this to separate the client name & message
         )
-        self.padding_token = "<PAD>"  # we will use this to separate the hash
+        self.padding_token = "~"  # we will use this to separate the hash
         # initialize TCP socket
         self.s = socket.socket()
         print(f"[*] Connecting to {self.SERVER_HOST}:{self.SERVER_PORT}...")
@@ -61,6 +61,9 @@ class Client:
             to_send = f"[{date_now}] {name}{self.separator_token}{to_send}".strip()
             # finally, send the message
             try:
+            # special symbol for separataing hash and message
+                if '~' in to_send:
+                    raise KeyError
                 self.send_message(to_send)
             except KeyError:
                 print(
@@ -71,17 +74,13 @@ class Client:
         while True:
             # receive the packet from the server
             packet = self.s.recv(1024).decode()
-            # split the packet into hash, encrypted message
             msg_hash, message = (
-                packet.split(self.padding_token)[0],
                 Encrypting()
-                .decrypt_message(
-                    packet.split(self.padding_token)[1], self.client_private
-                )
-                .strip(),
+                .decrypt_message(packet, self.client_private)
+                .split(self.padding_token)
             )
             # check if the hash matches the message
-            if sha256(message.encode()).hexdigest() != msg_hash:
+            if sha256(message.strip().encode()).hexdigest() != msg_hash:
                 print("[!] Message was tampered with!")
                 continue
             print("\n" + message)
@@ -90,9 +89,12 @@ class Client:
         # send the message to the server
         self.s.send(
             (
-                sha256(message.encode()).hexdigest()
-                + self.padding_token
-                + Encrypting().encrypt_message(message, self.server_public)
+                Encrypting().encrypt_message(
+                    sha256(message.strip().encode()).hexdigest()
+                    + self.padding_token
+                    + message,
+                    self.server_public,
+                )
             ).encode()
         )
 

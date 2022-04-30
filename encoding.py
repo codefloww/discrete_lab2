@@ -18,7 +18,7 @@ class Encrypting:
     def _create_dictionary(self) -> None:
         """creates a dictionary with all the possible characters"""
         char_string = (
-            " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/()<>:;%&`'*@$#=[]"
+            " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/()<>:;%&`'*@$#=[]~"
             + '"'
             + "абвгґдеєжзиіїйклмнопрстуфхцчшщьюяАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ"
         )
@@ -29,7 +29,7 @@ class Encrypting:
     def _find_block_size(self, num: int) -> None:
         block_size = 1
         for i in range(1, num):
-            if int("154" * i) <= num and num < int("154" * (i + 1)):
+            if int("155" * i) <= num and num < int("155" * (i + 1)):
                 block_size = i
                 break
         block_size *= 3
@@ -99,7 +99,7 @@ class Encrypting:
         private_key = private_key or (self.n, self.__d)
         reverse_dicitonary = {v: k for k, v in Encrypting.dictionary.items()}
         decrypted_msg = []
-        encrypted_msg = encrypted_msg.split("~")[-1].split()
+        encrypted_msg = encrypted_msg.split()
         self._find_block_size(private_key[0])
         for block in encrypted_msg:
             decrypted_msg.append(self._decrypt_block(block, private_key))

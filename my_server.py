@@ -18,7 +18,7 @@ class Server:
         self.separator_token = (
             "<SEP>"  # we will use this to separate the client name & message
         )
-        self.padding_token = "<PAD>"
+        self.padding_token = "~"
         # initialize list/set of all connected client's sockets
         self.client_sockets = set()
         self.client_keys = {}
@@ -73,16 +73,12 @@ class Server:
             try:
                 # keep listening for a message from `cs` socket
                 packet = cs.recv(1024).decode()
-                # extract the message and hash from the packet
                 msg_hash, msg = (
-                    packet.split(self.padding_token)[0],
                     Encrypting()
-                    .decrypt_message(
-                        packet.split(self.padding_token)[1], self.server_private
-                    )
-                    .strip(),
+                    .decrypt_message(packet, self.server_private)
+                    .split(self.padding_token)
                 )
-                on_server_msg_hash = sha256(msg.encode()).hexdigest()
+                on_server_msg_hash = sha256(msg.strip().encode()).hexdigest()
             except Exception as e:
                 # client no longer connected
                 # remove it from the set
@@ -113,10 +109,9 @@ class Server:
         """
         client_socket.send(
             (
-                sha256(msg.encode()).hexdigest()
-                + self.padding_token
-                + Encrypting().encrypt_message(
-                    msg, self.client_keys[str(client_socket)]
+                Encrypting().encrypt_message(
+                    sha256(msg.strip().encode()).hexdigest() + self.padding_token + msg,
+                    self.client_keys[str(client_socket)],
                 )
             ).encode()
         )
