@@ -25,7 +25,7 @@ class Client:
         self.s.connect((self.SERVER_HOST, self.SERVER_PORT))
         print("[+] Connected.")
 
-    def run(self) -> None:
+    def __exchange_keys(self):
         # receive the server's public key
         self.server_public = self.s.recv(1024).decode()
         self.server_public = tuple(map(int, self.server_public[1:-1].split(", ")))
@@ -37,6 +37,10 @@ class Client:
         )
         self.s.send(str(client_public_encoded).encode())
         print(self.server_public)
+
+    def run(self) -> None:
+
+        self.__exchange_keys()
 
         # prompt the client for a name
         name = input("Enter your name: ")
@@ -61,8 +65,8 @@ class Client:
             to_send = f"[{date_now}] {name}{self.separator_token}{to_send}".strip()
             # finally, send the message
             try:
-            # special symbol for separataing hash and message
-                if '~' in to_send:
+                # special symbol for separataing hash and message
+                if "~" in to_send:
                     raise KeyError
                 self.send_message(to_send)
             except KeyError:

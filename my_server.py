@@ -33,6 +33,16 @@ class Server:
         # generates a new pair of keys for server
         self.server_public, self.server_private = Encrypting().get_keys()
 
+    def __exchage_keys(self, client_socket):
+        client_socket.send(str(self.server_public).encode())
+        client_public = client_socket.recv(1024).decode()
+        client_public = Encrypting().decrypt_message(
+                client_public, self.server_private
+        )
+        self.client_keys[str(client_socket)] = tuple(
+            map(int, client_public.rstrip()[1:-1].split(", "))
+        )
+
     def start(self) -> None:
         """Start the server and waits for incoming connections and then handling each connection in a new thread"""
         # listen for upcoming connections
@@ -45,16 +55,9 @@ class Server:
             print(f"[+] {client_address} connected.")
             # add the new connected client to connected sockets
             self.client_sockets.add(client_socket)
-            # exchanges keys with client
-            client_socket.send(str(self.server_public).encode())
-            client_public = client_socket.recv(1024).decode()
-            client_public = Encrypting().decrypt_message(
-                client_public, self.server_private
-            )
 
-            self.client_keys[str(client_socket)] = tuple(
-                map(int, client_public.rstrip()[1:-1].split(", "))
-            )
+            self.__exchage_keys(client_socket)
+            
             # start a new thread that listens for each client's messages
             t = Thread(target=self.listen_for_client, args=(client_socket,))
             # make the thread daemon so it ends whenever the main thread ends
